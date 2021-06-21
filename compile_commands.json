@@ -18,45 +18,16 @@
       "-Wswitch-enum",
       "-Wconversion",
       "-Wunreachable-code",
+      "-o2",
       "-g",
       "-I/usr/include/mpd",
       "-c",
-      "mptest.c",
+      "src/mpimg.c",
       "-o",
-      "mptest.o"
+      "src/mpimg.o"
     ],
-    "directory": "/home/arno/src/mptest",
-    "file": "/home/arno/src/mptest/mptest.c",
-    "output": "/home/arno/src/mptest/mptest.o"
-  },
-  {
-    "arguments": [
-      "/usr/bin/x86_64-linux-gnu-gcc-10",
-      "-std=gnu99",
-      "-pedantic",
-      "-Wextra",
-      "-Wall",
-      "-Wundef",
-      "-Wshadow",
-      "-Wpointer-arith",
-      "-Wcast-align",
-      "-Wstrict-prototypes",
-      "-Wstrict-overflow=5",
-      "-Wwrite-strings",
-      "-Wcast-qual",
-      "-Wswitch-default",
-      "-Wswitch-enum",
-      "-Wconversion",
-      "-Wunreachable-code",
-      "-g",
-      "-I/usr/include/mpd",
-      "-c",
-      "xtest.c",
-      "-o",
-      "xtest.o"
-    ],
-    "directory": "/home/arno/src/mptest",
-    "file": "/home/arno/src/mptest/xtest.c",
-    "output": "/home/arno/src/mptest/xtest.o"
+    "directory": "/home/arno/src/mpimg",
+    "file": "/home/arno/src/mpimg/src/mpimg.c",
+    "output": "/home/arno/src/mpimg/src/mpimg.o"
   }
 ]
