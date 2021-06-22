@@ -2,7 +2,8 @@ VERSION = 1.0
 TARGET = mpimg
 PREFIX = /usr/local
 MANPREFIX = ${PREFIX}/share/man
-LIBS = /usr/lib/x86_64-linux-gnu/libmpdclient.so.2
+LIBS = -lmpdclient
+# LIBS = /usr/lib/x86_64-linux-gnu/libmpdclient.so.2
 INCL = -I/usr/include/mpd
 CC = gcc
 CFLAGS = -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow -Wpointer-arith \

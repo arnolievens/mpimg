@@ -2,7 +2,7 @@
 mpimg - mpd albumart client
 
 # SYNOPSIS
-**trx** \[options\] \[file|baudrate|timeout|count\] \[cmd1\] ...
+**mpimg** \[options\] \[arguments\] \[command\]
 
 # DESCRIPTION
 Mpimg is a command-line utility to download albumartwork from a remote or local mpd server using the builtin tcp protocol\

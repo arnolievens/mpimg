@@ -1,6 +1,7 @@
 # mpimg
 
-Mpimg is a command-line utility to download albumartwork from a remote or local mpd server using the builtin tcp protocol\
+Mpimg is a command-line utility that downloads albumartwork from a remote or local mpd server using the builtin tcp protocol\
+It's mostly useful to display cover art when the mpd server is on a remote computer.
 
 ### usage
 
