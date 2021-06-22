@@ -5,7 +5,7 @@ It's mostly useful to display cover art when the mpd server is on a remote compu
 
 ### usage
 
-[documentation](https://github.com/arnolievens/trx/blob/main/doc/mpimg.md)
+[documentation](https://github.com/arnolievens/mpimg/blob/main/doc/mpimg.md)
 
 ### dependencies
 
