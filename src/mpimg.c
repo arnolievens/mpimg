@@ -4,98 +4,20 @@
  * @filename    : mpimg.c
  ******************************************************************************/
 
-#include <unistd.h>
 #include <errno.h>
 #include <getopt.h>
 #include <mpd/client.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
+#include "mpimg.h"
 
 #define ENV_HOST                "MPD_HOST"
 #define ENV_PORT                "MPD_PORT"
 #define ENV_ALBUMART            "MPD_ALBUMART"
-
-#define LENGTH(a)               sizeof(a)/sizeof(a[0])
-
-
-/*******************************************************************************
- *                                  types
- ******************************************************************************/
-
-/**
- * operational mode
- */
-typedef enum idlemode_t {
-    NONE,                       /**< run once */
-    IDLE,                       /**< run once but wait for status update */
-    IDLELOOP,                   /**< wait for status update and loop forever */
-} idlemode_t;
-
-/**
- * program options sert by args
- */
-struct options {
-    char *host;                 /**< mpd server address or hostname */
-    unsigned int port;          /**< mpd server port */
-    int verbose;                /**< print more info to stdout */
-    const char* output_file;    /**< write image to this file */
-    const char* song;           /**< when provided this image will be fetched */
-    mode_t mode;                /**< normal, idle or idleloop */
-} options;
-
-
-/*******************************************************************************
- *                                   proto
- ******************************************************************************/
-
-/**
- * halp!
- */
-static void print_usage(void);
-
-/**
- * print song tags
- *
- * @param[in] song uri
- * @return status 0 for succes, -1 for fail
- */
-/* static int print_song(const struct mpd_song* song); */
-
-/**
- * download albumart for given song
- *
- * caller must free data
- *
- * @global conn mpd server
- * @global options contains program options set by args
- * @param[out] data pointer to image data
- * @param[in[ uri song we want image for
- * @return total size of data or -1 on error
- */
-static ssize_t get_albumart(uint8_t** data, const char* uri);
-
-/**
- * print output to file or stdout
- *
- * @global options contains program options set by args
- * @parm[in] data binary data containing image
- * @param[in] len size of data
- * @return status 0 for succes, -1 for fail
- */
-static int print_output(const uint8_t* data, size_t len);
-
-/**
- * get albumart and write to file
- *
- * run immediately or wait for update before fetching
- * run once or loop forever
- *
- * @global options contains program options set by args
- * @global conn mpd server
- * @return status 0 for succes, -1 for fail
- */
-static int run(void);
 
 
 /*******************************************************************************
@@ -111,6 +33,8 @@ extern char **environ;
  * connection to mpd server
  */
 static struct mpd_connection *conn;
+
+static options_t options;
 
 /**
  * getopts options
@@ -130,6 +54,7 @@ static const struct option long_options[] = {
 /*******************************************************************************
  *                                functions
  ******************************************************************************/
+
 
 void print_usage(void)
 {
@@ -320,8 +245,16 @@ int run(void)
     return 0;
 }
 
+
+/*******************************************************************************
+ *                                  main
+ ******************************************************************************/
+
+
 int main(int argc, char **argv)
 {
+    UNUSED(print_song((void*)NULL));
+
     /* ENV vars */
     while (*environ) {
         if (strstr(*environ, ENV_HOST)) {
@@ -386,6 +319,7 @@ int main(int argc, char **argv)
         switch (options.mode) {
             case IDLE: printf("mode:   idle\n"); break;
             case IDLELOOP: printf("mode:   idleloop\n"); break;
+            case NONE:
             default: break;
         }
     }

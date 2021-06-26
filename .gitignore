@@ -1,3 +1,5 @@
 *.o
 *.jpg
 mpimg
+tags
+.ccls-cache/
