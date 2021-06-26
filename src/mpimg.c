@@ -187,6 +187,7 @@ int print_output(const uint8_t* data, size_t len)
     }
 
     fwrite(data, 1, (size_t)len, fd);
+    fclose(fd);
     return 0;
 }
 
@@ -253,8 +254,6 @@ int run(void)
 
 int main(int argc, char **argv)
 {
-    UNUSED(print_song((void*)NULL));
-
     /* ENV vars */
     while (*environ) {
         if (strstr(*environ, ENV_HOST)) {
