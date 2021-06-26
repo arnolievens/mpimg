@@ -15,7 +15,6 @@
       "-Wwrite-strings",
       "-Wcast-qual",
       "-Wswitch-default",
-      "-Wswitch-enum",
       "-Wconversion",
       "-Wunreachable-code",
       "-o2",

@@ -7,7 +7,7 @@ INCL = -I/usr/include/mpd
 CC = gcc
 CFLAGS = -std=gnu99 -pedantic -Wextra -Wall -Wundef -Wshadow -Wpointer-arith \
 		 -Wcast-align -Wstrict-prototypes -Wstrict-overflow=5 -Wwrite-strings \
-		 -Wcast-qual -Wswitch-default -Wswitch-enum -Wconversion \
+		 -Wcast-qual -Wswitch-default -Wconversion \
 		 -Wunreachable-code -o2 -g \
 
 .PHONY: default all clean

@@ -120,6 +120,7 @@ ssize_t get_albumart(uint8_t** data, const char* uri)
     }
 
     size_t totlen = 0, len = 0, offset = 0;
+    struct mpd_pair *pair;
     *data = NULL;
 
     while (!totlen || totlen > offset) {
@@ -135,14 +136,16 @@ ssize_t get_albumart(uint8_t** data, const char* uri)
             return -1;
         }
 
-        /* chunk headers */
-        struct mpd_pair *pair;
+        /* chunk headers: file size */
         pair = mpd_recv_pair_named(conn, "size");
-        if (pair) totlen = (size_t)atoi(pair->value);
+        if (!pair) return -1;
+        totlen = (size_t)atoi(pair->value);
         mpd_return_pair(conn, pair);
 
+        /* chunk headers: offset */
         pair = mpd_recv_pair_named(conn, "binary");
-        if (pair) len = (size_t)atoi(pair->value);
+        if (!pair) return -1;
+        len = (size_t)atoi(pair->value);
         mpd_return_pair(conn, pair);
 
         /* first run, allocate data */
@@ -196,61 +199,53 @@ int run(void)
     ssize_t len = 0;
     uint8_t* albumart = NULL;
     struct mpd_song* song = NULL;
-    const char* uri;
+    const char* uri = NULL;
 
-    /* idle loop */
-    do {
-        /* IDLE : wait for status update */
-        if (options.verbose) printf("waiting for mpd server...\n");
-        if (options.mode == IDLE || options.mode == IDLELOOP) {
-            mpd_run_idle_mask(conn, MPD_IDLE_PLAYER);
-        }
+    if (options.verbose) printf("waiting for mpd server...\n");
 
-        /* song provided in arg */
-        if (options.song) {
-            uri = options.song;
+    /* song provided in arg */
+    if (options.song) {
+        uri = options.song;
 
-        /* use current song */
-        } else {
-            song = mpd_run_current_song(conn);
-            if (!song) {
-                /* failed to get current song, try again next time */
-                fprintf(stderr, "error requesting current song: %s\n",
-                    strerror(errno));
-                continue;
-            }
-            uri = mpd_song_get_uri(song);
-        }
+    /* use current song */
+    } else {
+        song = mpd_run_current_song(conn);
+        if (!song) goto fail;
+        uri = mpd_song_get_uri(song);
+        if (!uri) goto fail;
+    }
 
-        /* fetch albumart */
-        if (options.verbose) printf("fetching cover.jpg for \"%s\"\n", uri);
-        len = get_albumart(&albumart, uri);
+    /* fetch albumart */
+    if (options.verbose) printf("fetching cover.jpg for \"%s\"\n", uri);
+    if ((len = get_albumart(&albumart, uri)) <= 0) goto fail;
 
-        if (len <= 0) {
-            fprintf(stderr, "error retrieving albumart: %s\n",
-                    strerror(errno));
-            return -1;
-        }
+    /* print to file */
+    if (print_output(albumart, (size_t)len) < 0) {
+        fprintf(stderr, "error printing to file: %s\n", strerror(errno));
+        goto fail;
+    }
 
-        if (print_output(albumart, (size_t)len) < 0) {
-            fprintf(stderr, "error printing to file: %s\n",
-                    strerror(errno));
-            return -1;
-        }
-
-        /* cleanup */
-        if (albumart) {
-            free(albumart);
-            albumart = NULL;
-        }
-        if (song) {
-            free(song);
-            song = NULL;
-        }
-
-    } while (options.mode == IDLELOOP);
-
+    /* succes */
+    if (albumart) {
+        free(albumart);
+        albumart = NULL;
+    }
+    if (song) {
+        free(song);
+        song = NULL;
+    }
     return 0;
+
+    fail:
+    if (albumart) {
+        free(albumart);
+        albumart = NULL;
+    }
+    if (song) {
+        free(song);
+        song = NULL;
+    }
+    return -1;
 }
 
 
@@ -342,11 +337,11 @@ int main(int argc, char **argv)
 
     /* validate output file" */
     if (!options.output_file) {
-        /* options.output_file = "cover.jpg"; */
         fprintf(stderr, "please provide output file setting\n");
         exit(EXIT_FAILURE);
     }
 
+    connect:
     /* connect to server */
     conn = mpd_connection_new(options.host, options.port, 0);
     enum mpd_error err = mpd_connection_get_error(conn);
@@ -355,11 +350,50 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    /* run */
-    if (run() < 0) {
-        if (conn) mpd_connection_free(conn);
-        exit(EXIT_FAILURE);
+    do {
+        int status = 0;
+        if (options.mode == IDLE || options.mode == IDLELOOP)
+            mpd_run_idle_mask(conn, MPD_IDLE_PLAYER);
+
+        status = run();
+
+        if (status < 0) {
+            enum mpd_error e = mpd_connection_get_error(conn);
+            switch (e) {
+
+                case MPD_ERROR_SERVER: {
+
+                    enum mpd_server_error se = mpd_connection_get_server_error(conn);
+                    switch(se) {
+
+                        /* password error ? TODO: mpd password */
+                        case MPD_SERVER_ERROR_PASSWORD:
+                            fprintf(stderr,
+                                    "mpd password required -  not yet implemented");
+                            break;
+
+                        /* albumart does not exist - disconnect and reconnect */
+                        case MPD_SERVER_ERROR_NO_EXIST: {
+                            if (options.mode == IDLELOOP) {
+                                if (options.verbose)
+                                    printf("artwork not found, trying again later");
+                                free(conn);
+                                conn = NULL;
+                                goto connect;
+                            }
+                            break;
+                        }
+                        default: fprintf(stderr, "mpd error: %i\n", se);
+                    }
+                    break;
+                }
+
+                default:
+                    fprintf(stderr, "failed to obtain albumart: error %i\n", e);
+            }
+        }
     }
+    while (options.mode == IDLELOOP);
 
     if (conn) mpd_connection_free(conn);
     exit(EXIT_SUCCESS);
