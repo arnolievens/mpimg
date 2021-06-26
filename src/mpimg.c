@@ -198,8 +198,9 @@ int run(void)
     struct mpd_song* song = NULL;
     const char* uri;
 
+    /* idle loop */
     do {
-        /* IDLE: wait for status update */
+        /* IDLE : wait for status update */
         if (options.verbose) printf("waiting for mpd server...\n");
         if (options.mode == IDLE || options.mode == IDLELOOP) {
             mpd_run_idle_mask(conn, MPD_IDLE_PLAYER);
@@ -212,6 +213,12 @@ int run(void)
         /* use current song */
         } else {
             song = mpd_run_current_song(conn);
+            if (!song) {
+                /* failed to get current song, try again next time */
+                fprintf(stderr, "error requesting current song: %s\n",
+                    strerror(errno));
+                continue;
+            }
             uri = mpd_song_get_uri(song);
         }
 
