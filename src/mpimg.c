@@ -39,7 +39,7 @@ static options_t options;
 /**
  * getopts options
  */
-static const char* short_options = "H,p:,o:,s:,v,h";
+static const char* short_options = "H:,p:,o:,s:,v,h";
 static const struct option long_options[] = {
     {"host",    required_argument, NULL, 'H'},
     {"port",    required_argument, NULL, 'p'},
